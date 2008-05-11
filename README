@@ -1,0 +1,153 @@
+= ActionmailerX509
+
+Fabien Penso / CONOVAE
+http://www.conovae.com
+
+== DESCRIPTION
+
+  This plugin allows you to send X509 signed mails.
+
+  It has been tested with Rails 2.0.1.
+
+== Creation of the certificates
+
+(1) Generate your own Certificate Authority (CA).
+
+  openssl genrsa -des3 -out ca.key 4096
+  openssl req -new -x509 -days 365 -key ca.key -out ca.crt
+
+(2) Generate a server key and request for signing (csr).
+
+  Note : use your email address for the Common Name (CN) field
+
+  openssl genrsa -des3 -out server.key 4096
+  openssl req -new -key server.key -out server.csr
+
+(3) Sign the certificate signing request (csr) with the self-created
+    certificate authority (CA) that you made earlier.
+
+  openssl x509 -req -days 365 -in server.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out server.crt
+
+(3 bis) or self sign your certificate with the same key.
+
+  openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
+
+(4) Compute all thoses files into a PCKS#12 file (so you can include it in your mailer):
+
+  openssl pkcs12 -export -in server.crt -inkey server.key -certfile ca.key -name "My Cert" -out name-cert.p12
+
+== Extracting the files from a PKCS#12 file
+
+If you have a PKCS#12 file, usualy named .p12, you can extract the required files with
+the following commands.
+
+(1) Extract the private key
+
+  openssl pkcs12 -in file_input.p12 -clcerts -nocerts -out file_out.key -nodes
+
+(2) Extract the certificate
+
+  openssl pkcs12 -in file_input.p12 -clcerts -nokeys -out file_out.crt -nodes
+
+Please note the -nodes to leave the private key uncrypted, use -des if you wish
+to protect it.
+
+== USING THE PLUGIN
+
+If you wish to send a signed email you just need to put new informations in
+your ActionMailer model.
+
+    class FooModel < ActionMailer::Base
+    
+      def sending_method(email, from , subject = "Empty subject for signed")
+        recipients email
+        from       from
+        subject    subject
+        sent_on    Time.now
+    
+        # If you want to sign the mail
+        x509_sign  true
+        x509_cert  "certs/yourwebsite.crt"
+        x509_key   "certs/yourwebsite.key"
+        # In case your certificate has a passphrase
+        passphrase "my passphrase for the certificate"
+      end
+    end
+
+You can also specify the certificate and key in your environment file:
+
+    ActionMailer::Base.default_x509_sign = true
+    ActionMailer::Base.default_x509_cert = "certs/server.crt"
+    ActionMailer::Base.default_x509_key  = "certs/server.key"
+
+== USING TEST
+
+You can benchmark the plugin with:
+
+  rake actionmailer_x509:performance_test
+
+Send yourself a signed mail with:
+
+  rake actionmailer_x509:send_test
+
+Verify the plugin generates valid signature
+
+  rake actionmailer_x509:verify_signature
+
+Generate a signed mail in a local file
+
+  rake actionmailer_x509:generate_mail
+
+== REQUIREMENTS
+
+ * Ruby 1.8 or later
+ * Rails 2.0 or later
+ * OpenSSL 0.9.8e or later and Ruby/OpenSSL 1.8.6.36 or later
+
+== Mail User Agent tested
+
+We checked with the following MUA for making sure the signed mails are
+readable.
+
+ * Mutt 1.5: OK
+ * Outlook 2007: OK
+ * iPhone: The message appears without the signature but no other problem
+ * Thunderbird 2.0: OK
+ * Evolution 2.12: OK
+ * Apple Mail.app: OK
+ * Google Mail: A file smime.p3s appears as attachment
+
+== AUTHORS
+
+This development is done by Fabien Penso <fabien.penso@conovae.com> from
+CONOVAE http://www.conovae.com for Dimelo http://www.dimelo.fr
+
+This code is under the BSD license.
+
+== LICENSE
+
+Copyright (c) 2008, Fabien Penso
+
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the University of California, Berkeley nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
