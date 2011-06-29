@@ -2,12 +2,12 @@
 #
 # actionmailer_x509 is a rails plugin to allow X509 outgoing mail to be X509
 # signed.
-# 
+#
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -16,7 +16,7 @@
 #     * Neither the name of the University of California, Berkeley nor the
 #       names of its contributors may be used to endorse or promote products
 #       derived from this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
 # EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -62,9 +62,10 @@ module ActionMailer #:nodoc:
     adv_attr_accessor :x509_passphrase
 
 
+
     # We replace the create! methods and run a new method if signing is required
-    def create_with_sign!(method_name, *parameters)
-      mail = create_without_sign!(method_name, *parameters)
+    def initialize_with_sign(method_name, *parameters)
+      mail = initialize_without_sign(method_name, *parameters)
 
       x509_initvar()
 
@@ -77,7 +78,7 @@ module ActionMailer #:nodoc:
       end
 
     end
-    alias_method_chain :create!, :sign
+    alias_method_chain :initialize, :sign
 
     # X509 SMIME signing
     def x509_sign_smime(mail)
@@ -86,7 +87,7 @@ module ActionMailer #:nodoc:
       end
 
       # We create a new mail holding the older mail + signature
-      m = TMail::Mail.new
+      m = Mail.new
       m.subject = mail.subject
       m.to = mail.to
       m.cc = mail.cc
@@ -94,7 +95,7 @@ module ActionMailer #:nodoc:
       m.mime_version = mail.mime_version
       m.date = mail.date
       m.body = "This is an S/MIME signed message\n"
-      headers.each { |k, v| m[k] = v } # that does nothing in general
+#      headers.each { |k, v| m[k] = v } # that does nothing in general
 
       # We can remove the headers from the older mail we encapsulate.
       # Leaving allows to have the headers signed too within the encapsulated
@@ -124,7 +125,8 @@ module ActionMailer #:nodoc:
 
         # Adding the signature part to the older mail
         # NOTE: we can not reparse the whole mail, TMail adds a \r\n which breaks the signature...
-        newm = TMail::Mail.parse(smime0)
+        newm = Mail.new(smime0)
+        p smime0.inspect
         for part in newm.parts do
           if part.content_type == "application/x-pkcs7-signature"
             m.parts << part
@@ -149,7 +151,7 @@ module ActionMailer #:nodoc:
 
         @mail = m
       rescue Exception => detail
-        logger.error("Error while SMIME signing the mail : #{detail}")
+        logger.error("Error while SMIME signing the mail : #{detail}")# if logger
       end
 
       ## logger.debug("x509_sign_smime, resulted email\n-------------( test X509 )----------\n#{m.encoded}\n-------------( test X509 )----------")

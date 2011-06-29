@@ -24,9 +24,9 @@ unless defined?(ActiveRecord)
     end
   end
 
-  %w(action_pack action_mailer active_record action_controller active_record/fixtures action_controller/test_process).each {|f| require f}
+  %w(action_pack action_mailer active_record action_controller active_record/fixtures action_controller/test_case action_dispatch).each {|f| require f}
 
-  Dependencies.load_paths.unshift "#{plugin_root}/lib"
+  ActiveSupport::Dependencies.autoload_paths.unshift "#{plugin_root}/lib"
 end
 
 # Define the connector
@@ -43,7 +43,7 @@ class ActiveRecordTestConnector
       unless self.connected || !self.able_to_connect
         setup_connection
         load_schema
-        require_fixture_models
+#        require_fixture_models
         self.connected = true
       end
     rescue Exception => e  # errors from ActiveRecord setup
@@ -91,12 +91,6 @@ end
 
 # Test case for inheritance
 class ActiveRecordTestCase < Test::Unit::TestCase
-  # Set our fixture path
-  if ActiveRecordTestConnector.able_to_connect
-    self.fixture_path = "#{File.dirname(__FILE__)}/fixtures/"
-    self.use_transactional_fixtures = false
-  end
-
   def self.fixtures(*args)
     super if ActiveRecordTestConnector.connected
   end
@@ -111,7 +105,3 @@ class ActiveRecordTestCase < Test::Unit::TestCase
 end
 
 ActiveRecordTestConnector.setup
-ActionController::Routing::Routes.reload rescue nil
-ActionController::Routing::Routes.draw do |map|
-  map.connect ':controller/:action/:id'
-end

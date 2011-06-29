@@ -7,7 +7,7 @@ class ActionmailerX509Test < Test::Unit::TestCase #:nodoc:
 
   # If we want to sign a message, verify a signature is attached
   def test_signed
-    mail = Notifier.create_fufusigned("<destination@foobar.com>", "<demo@foobar.com>")
+    mail = Notifier.fufusigned("<destination@foobar.com>", "<demo@foobar.com>")
 
     found = false
     for part in mail.parts do
@@ -39,7 +39,7 @@ class ActionmailerX509Test < Test::Unit::TestCase #:nodoc:
 
   # If we want no signature, verify not signature is attached to the mail
   def test_not_signed
-    mail = Notifier.create_fufu("<destination@foobar.com>", "<demo@foobar.com>")
+    mail = Notifier.fufu("<destination@foobar.com>", "<demo@foobar.com>")
 
     found = false
     for part in mail.parts do
@@ -56,7 +56,7 @@ class ActionmailerX509Test < Test::Unit::TestCase #:nodoc:
   def test_signed_with_no_certs
     crashed = false
     begin
-      mail = Notifier.create_fufusigned("<destination@foobar.com>", "<demo@foobar.com>", "", "/tmp/doesnotexist")
+      mail = Notifier.fufusigned("<destination@foobar.com>", "<demo@foobar.com>", "", "/tmp/doesnotexist")
     rescue Errno::ENOENT => detail
       crashed = true
     end
@@ -68,7 +68,7 @@ class ActionmailerX509Test < Test::Unit::TestCase #:nodoc:
   def test_signed_incorrect_certs
     crashed = false
     begin
-      mail = Notifier.create_fufusigned("<destination@foobar.com>", "<demo@foobar.com>", "", "#{File.dirname(__FILE__)}/../lib/certs/server.key")
+      mail = Notifier.fufusigned("<destination@foobar.com>", "<demo@foobar.com>", "", "#{File.dirname(__FILE__)}/../lib/certs/server.key")
     rescue OpenSSL::X509::CertificateError => detail
       crashed = true
     end
