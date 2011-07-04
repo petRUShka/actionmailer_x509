@@ -1,9 +1,10 @@
 require 'rake'
 require 'rake/testtask'
 require 'rake/rdoctask'
+require '../models/notifier'
 
 namespace :actionmailer_x509 do
-  #desc "Sending a mail, for test."
+  desc "Sending a mail, for test."
   task(:send_test => :environment) do
     if ENV['email'].nil?
       puts "You should call the rake task like\nrake actionmailer_x509:send_test email=yourmail@yourdomain.com\n"
@@ -38,7 +39,7 @@ namespace :actionmailer_x509 do
     end
   end
 
-  #desc "Generates a signed mail in a file."
+  desc "Generates a signed mail in a file."
   task(:generate_mail => :environment) do
     mail = Notifier.fufusigned("<destination@foobar.com>", "<demo@foobar.com>")
     path = ENV['mail']
@@ -50,7 +51,7 @@ namespace :actionmailer_x509 do
     puts "You can use mail=filename as argument to change it." if ENV['mail'].nil?
   end
 
-  #desc "Check if signature is valid."
+  desc "Check if signature is valid."
   task(:verify_signature => :environment) do
     require 'tempfile'
     mail = Notifier.fufusigned("<destination@foobar.com>", "<demo@foobar.com>")
