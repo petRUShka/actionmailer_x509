@@ -126,7 +126,6 @@ module ActionMailer #:nodoc:
         # Adding the signature part to the older mail
         # NOTE: we can not reparse the whole mail, TMail adds a \r\n which breaks the signature...
         newm = Mail.new(smime0)
-        p smime0.inspect
         for part in newm.parts do
           if part.content_type == "application/x-pkcs7-signature"
             m.parts << part
