@@ -128,7 +128,7 @@ module ActionMailer #:nodoc:
         # NOTE: we can not reparse the whole mail, TMail adds a \r\n which breaks the signature...
         newm = Mail.new(smime0)
         for part in newm.parts do
-          if part.content_type == "application/x-pkcs7-signature"
+          if part.content_type =~ "application/x-pkcs7-signature"
             m.parts << part
             break
           end

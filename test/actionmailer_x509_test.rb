@@ -11,7 +11,7 @@ class ActionmailerX509Test < Test::Unit::TestCase #:nodoc:
 
     found = false
     for part in mail.parts do
-      if part.content_type == "application/x-pkcs7-signature"
+      if part.content_type =~ "application/x-pkcs7-signature"
         found = true
         break
       end
@@ -44,7 +44,7 @@ class ActionmailerX509Test < Test::Unit::TestCase #:nodoc:
     found = false
     for part in mail.parts do
       puts part.content_type
-      if part.content_type == "application/x-pkcs7-signature"
+      if part.content_type =~ "application/x-pkcs7-signature"
         found = true
         break
       end
