@@ -26,7 +26,8 @@ unless defined?(ActiveRecord)
 
   %w(action_pack action_mailer active_record action_controller active_record/fixtures action_controller/test_case action_dispatch).each {|f| require f}
 
-  ActiveSupport::Dependencies.autoload_paths.unshift "#{plugin_root}/lib"
+#  ActiveSupport::Dependencies.autoload_paths.unshift "#{plugin_root}/lib"
+   require plugin_root + '/lib/models/notifier'
 end
 
 # Define the connector
@@ -105,3 +106,14 @@ class ActiveRecordTestCase < Test::Unit::TestCase
 end
 
 ActiveRecordTestConnector.setup
+
+ActionMailer::Base.smtp_settings = {
+    :address => "smtp.com",
+    :port => 465,
+    :domain => 'test.com',
+    :user_name => 'user',
+    :password => 'pass',
+    :authentication => 'login',
+    :enable_starttls_auto => true
+}
+

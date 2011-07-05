@@ -95,7 +95,8 @@ module ActionMailer #:nodoc:
       m.mime_version = mail.mime_version
       m.date = mail.date
       m.body = "This is an S/MIME signed message\n"
-#      headers.each { |k, v| m[k] = v } # that does nothing in general
+      m.delivery_method(mail.delivery_method.class, mail.delivery_method.settings)
+      #      headers.each { |k, v| m[k] = v } # that does nothing in general
 
       # We can remove the headers from the older mail we encapsulate.
       # Leaving allows to have the headers signed too within the encapsulated

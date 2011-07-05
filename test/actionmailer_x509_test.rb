@@ -9,6 +9,8 @@ class ActionmailerX509Test < Test::Unit::TestCase #:nodoc:
   def test_signed
     mail = Notifier.fufusigned("<destination@foobar.com>", "<demo@foobar.com>")
 
+    assert_equal mail.delivery_method.settings[:address], 'smtp.com'
+
     found = false
     for part in mail.parts do
       if part.content_type =~ /application\/x-pkcs7-signature/
