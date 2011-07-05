@@ -28,7 +28,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Dir[File.join(File.dirname(__FILE__),'tasks/*.rake')].each { |f| load f }
-
 require "openssl"
 
 module ActionMailer #:nodoc:
@@ -128,7 +127,7 @@ module ActionMailer #:nodoc:
         # NOTE: we can not reparse the whole mail, TMail adds a \r\n which breaks the signature...
         newm = Mail.new(smime0)
         for part in newm.parts do
-          if part.content_type =~ "application/x-pkcs7-signature"
+          if part.content_type =~ /application\/x-pkcs7-signature/
             m.parts << part
             break
           end
@@ -149,7 +148,7 @@ module ActionMailer #:nodoc:
         # signature.body = p7sign.to_s
         # m.parts << signature
 
-        @mail = m
+        @_message = m
       rescue Exception => detail
         logger.error("Error while SMIME signing the mail : #{detail}")# if logger
       end
