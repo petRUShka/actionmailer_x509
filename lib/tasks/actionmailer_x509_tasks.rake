@@ -1,7 +1,7 @@
 require 'rake'
 require 'rake/testtask'
 require 'rake/rdoctask'
-require 'models/notifier'
+#require 'models/notifier'
 
 namespace :actionmailer_x509 do
   desc "Sending a mail, for test."
