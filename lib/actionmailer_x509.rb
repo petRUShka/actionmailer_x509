@@ -92,11 +92,17 @@ module ActionMailer #:nodoc:
 #      m.to = mail.to
 #      m.cc = mail.cc
 #      m.from = mail.from
+#      m.content_id = mail.content_id
 #      m.mime_version = mail.mime_version
 #      m.date = mail.date
 #      m.body = "This is an S/MIME signed message\n"
 #      m.delivery_method(mail.delivery_method.class, mail.delivery_method.settings)
       #      headers.each { |k, v| m[k] = v } # that does nothing in general
+
+
+
+      # We should set content_id, otherwise Mail will set content_id after signing and will broke sign
+      mail.content_id ||= nil
 
       # We can remove the headers from the older mail we encapsulate.
       # Leaving allows to have the headers signed too within the encapsulated
@@ -117,7 +123,7 @@ module ActionMailer #:nodoc:
 
       begin
         # We add the encapsulated mail as attachement
- #       m.parts << mail
+#        m.parts << mail
 
         # Sign the mail
         # NOTE: the one following line is the slowest part of this code, signing is sloooow
@@ -127,17 +133,18 @@ module ActionMailer #:nodoc:
         # Adding the signature part to the older mail
         # NOTE: we can not reparse the whole mail, TMail adds a \r\n which breaks the signature...
         newm = Mail.new(smime0)
- #       for part in newm.parts do
- #         if part.content_type =~ /application\/x-pkcs7-signature/
- #           m.parts << part
- #           break
- #         end
- #       end
+       # for part in newm.parts do
+       #   if part.content_type =~ /application\/x-pkcs7-signature/
+       #     #part.body = part.body.encoded.gsub(/\r|\n/, "").gsub(/(.{64})/){$1 + "\r\n"}
+       #     m.parts << part
+       #   end
+       # end
 
         # We need to overwrite the content-type of the mail so MUA notices this is a signed mail
 #        m.content_type = 'multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; '
          newm.delivery_method(mail.delivery_method.class, mail.delivery_method.settings)
-
+#         newm.content_id = nil
+#         newm.parts.each{|p| p.content_id = nil}
         # NOTE: We can not use this as we need a B64 encoded signature, and no
         # methods provides it within the Ruby OpenSSL library... :(
         #

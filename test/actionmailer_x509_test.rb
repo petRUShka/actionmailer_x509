@@ -36,7 +36,6 @@ class ActionmailerX509Test < Test::Unit::TestCase #:nodoc:
       end
     end
     assert_equal(success, true)
-
   end
 
   # If we want no signature, verify not signature is attached to the mail
