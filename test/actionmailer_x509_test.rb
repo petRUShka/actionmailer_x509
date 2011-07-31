@@ -10,6 +10,7 @@ class ActionmailerX509Test < Test::Unit::TestCase #:nodoc:
     mail = Notifier.fufusigned("<destination@foobar.com>", "<demo@foobar.com>")
 
     assert_equal mail.delivery_method.settings[:address], 'smtp.com'
+    assert_equal mail.from, [ "demo@foobar.com" ]
 
     found = false
     for part in mail.parts do

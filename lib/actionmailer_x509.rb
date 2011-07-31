@@ -143,8 +143,13 @@ module ActionMailer #:nodoc:
         # We need to overwrite the content-type of the mail so MUA notices this is a signed mail
 #        m.content_type = 'multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; '
          newm.delivery_method(mail.delivery_method.class, mail.delivery_method.settings)
-#         newm.content_id = nil
-#         newm.parts.each{|p| p.content_id = nil}
+         newm.subject = mail.subject
+         newm.to = mail.to
+         newm.cc = mail.cc
+         newm.from = mail.from
+         newm.mime_version = mail.mime_version
+         newm.date = mail.date
+#         newm.body = "This is an S/MIME signed message\n"
         # NOTE: We can not use this as we need a B64 encoded signature, and no
         # methods provides it within the Ruby OpenSSL library... :(
         #
