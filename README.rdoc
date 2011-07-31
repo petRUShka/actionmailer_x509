@@ -1,13 +1,12 @@
 = ActionmailerX509
 
-Fabien Penso / CONOVAE
-http://www.conovae.com
+petRUShka, Fabien Penso
 
 == DESCRIPTION
 
-  This plugin allows you to send X509 signed mails.
+  This plugin allows you to send X509 signed mails with Rails 3 ActionMailer. If you want to sign mails with Rails 2, you should use original plugin: https://github.com/penso/actionmailer_x509
 
-  It has been tested with Rails 2.0.1.
+  It has been tested with Rails 3.0.3.
 
 == Creation of the certificates
 
@@ -52,27 +51,29 @@ the following commands.
 Please note the -nodes to leave the private key uncrypted, use -des if you wish
 to protect it.
 
+== INSTALLING THE PLUGIN
+
+Put this line in your Gemfile
+
+    gem 'actionmailer_x509'
+
 == USING THE PLUGIN
 
 If you wish to send a signed email you just need to put new informations in
 your ActionMailer model.
 
-    class FooModel < ActionMailer::Base
-    
+    class FooMailer < ActionMailer::Base
+
       def sending_method(email, from , subject = "Empty subject for signed")
-        recipients email
-        from       from
-        subject    subject
-        sent_on    Time.now
-    
         # If you want to sign the mail
         x509_sign  true
         x509_cert  "certs/yourwebsite.crt"
         x509_key   "certs/yourwebsite.key"
         # In case your certificate has a passphrase
-        passphrase "my passphrase for the certificate"
+        x509_passphrase "my passphrase for the certificate"
+
+        mail(:subject => subject, :to => email, :from => from)
       end
-    end
 
 You can also specify the certificate and key in your environment file:
 
@@ -101,7 +102,7 @@ Generate a signed mail in a local file
 == REQUIREMENTS
 
  * Ruby 1.8 or later
- * Rails 2.0 or later
+ * Rails 3.0 or later
  * OpenSSL 0.9.8e or later and Ruby/OpenSSL 1.8.6.36 or later
 
 == Mail User Agent tested
@@ -112,21 +113,27 @@ readable.
  * Mutt 1.5: OK
  * Outlook 2007: OK
  * iPhone: The message appears without the signature but no other problem
- * Thunderbird 2.0: OK
+ * Thunderbird 5.0: OK
  * Evolution 2.12: OK
  * Apple Mail.app: OK
  * Google Mail: A file smime.p3s appears as attachment
+ * Yandex Mail: A file smime.p3s appears as attachment
+ * Opera Mail: A file smime.p3s appears as attachment
 
 == AUTHORS
 
-This development is done by Fabien Penso <fabien.penso@conovae.com> from
+Porting to Rails 3\Mail from Rails 2\Tmail and wrap code in gem was done by petRUShka <petrushkin@yandex.ru>.
+
+Original development for Rails 2.0.1 was done by Fabien Penso <fabien.penso@conovae.com> from
 CONOVAE http://www.conovae.com for Dimelo http://www.dimelo.fr
+
+Special thanks to
 
 This code is under the BSD license.
 
 == LICENSE
 
-Copyright (c) 2008, Fabien Penso
+Copyright (c) 2011, petRUShka, 2008, Fabien Penso
 
 All rights reserved.
 Redistribution and use in source and binary forms, with or without
