@@ -8,6 +8,6 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/petRUShka/actionmailer_x509"
   s.require_path = "lib"
   s.rubygems_version = "1.3.5"
-  s.summary = "This Rails plugin allows you to send X509 signed mails."
+  s.summary = "This Rails 3 plugin allows you to send X509 signed mails."
 end
 
