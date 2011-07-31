@@ -27,7 +27,7 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-Dir[File.join(File.dirname(__FILE__),'tasks/*.rake')].each { |f| load f }
+require 'actionmailer_x509/railtie' if defined?(Rails)
 require "openssl"
 
 module ActionMailer #:nodoc:
