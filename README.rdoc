@@ -127,7 +127,7 @@ Porting to Rails 3\\Mail from Rails 2\\Tmail and wrap code in gem was done by pe
 Original development for Rails 2.0.1 was done by Fabien Penso <fabien.penso@conovae.com> from
 CONOVAE http://www.conovae.com for Dimelo http://www.dimelo.fr
 
-Special thanks to
+Special thanks to Geal[http://stackoverflow.com/users/203955/geal] for noticing on error.
 
 This code is under the BSD license.
 
