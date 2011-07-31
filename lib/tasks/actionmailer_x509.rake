@@ -3,6 +3,7 @@ require 'rake/testtask'
 require 'rake/rdoctask'
 require 'models/notifier'
 
+
 namespace :actionmailer_x509 do
   desc "Sending a mail that can be signed and\\or crypted, for test."
   task(:send_test => :environment) do
@@ -75,3 +76,12 @@ namespace :actionmailer_x509 do
 
   end
 end
+
+private
+
+def Boolean(string)
+  return true if string == true || string =~ /^true$/i
+  return false if string == false || string.nil? || string =~ /^false$/i
+  raise ArgumentError.new("invalid value for Boolean: \"#{string}\"")
+end
+
