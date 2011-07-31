@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name = "actionmailer_x509"
   s.version = "0.3.0"
-  s.authors = ["Fabien Penso", "CONOVAE", "petRUShka"]
+  s.authors = ["petRUShka", "Fabien Penso", "CONOVAE"]
   s.email = "petrushkin@yandex.ru"
   s.files = `git ls-files`.split("\n")
   s.test_files = `git ls-files -- {test,spec,features}/*`.split("\n")

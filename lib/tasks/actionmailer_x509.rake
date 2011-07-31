@@ -15,7 +15,7 @@ namespace :actionmailer_x509 do
       puts "#{File.dirname(__FILE__)}/../certs/ca.crt"
       puts "as an authority in your MUA. Remove it after your test!!!\n\n"
       puts "Emailing <#{ENV['email']}>"
-      Notifier.fufusigned("<#{ENV['email']}>", "<demo@foobar.com>", "Signed mail at #{Time.now.to_s}").deliver
+      Notifier.fufusigned("#{ENV['email']}", "demo@foobar.com", "Signed mail at #{Time.now.to_s}").deliver
     end
   end
 
