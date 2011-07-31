@@ -86,21 +86,6 @@ module ActionMailer #:nodoc:
         logger.debug("actionmailer_x509: X509 SMIME signing with cert #{@x509_cert} and key #{@x509_key}")
       end
 
-      # We create a new mail holding the older mail + signature
-#      m = Mail.new
-#      m.subject = mail.subject
-#      m.to = mail.to
-#      m.cc = mail.cc
-#      m.from = mail.from
-#      m.content_id = mail.content_id
-#      m.mime_version = mail.mime_version
-#      m.date = mail.date
-#      m.body = "This is an S/MIME signed message\n"
-#      m.delivery_method(mail.delivery_method.class, mail.delivery_method.settings)
-      #      headers.each { |k, v| m[k] = v } # that does nothing in general
-
-
-
       # We should set content_id, otherwise Mail will set content_id after signing and will broke sign
       mail.content_id ||= nil
 
@@ -122,26 +107,16 @@ module ActionMailer #:nodoc:
       prv_key = OpenSSL::PKey::RSA.new( File::read(@x509_key), @x509_passphrase)
 
       begin
-        # We add the encapsulated mail as attachement
-#        m.parts << mail
-
         # Sign the mail
         # NOTE: the one following line is the slowest part of this code, signing is sloooow
         p7sign = OpenSSL::PKCS7.sign(cert,prv_key,mail.encoded, [], OpenSSL::PKCS7::DETACHED)
         smime0 = OpenSSL::PKCS7::write_smime(p7sign)
 
         # Adding the signature part to the older mail
-        # NOTE: we can not reparse the whole mail, TMail adds a \r\n which breaks the signature...
         newm = Mail.new(smime0)
-       # for part in newm.parts do
-       #   if part.content_type =~ /application\/x-pkcs7-signature/
-       #     #part.body = part.body.encoded.gsub(/\r|\n/, "").gsub(/(.{64})/){$1 + "\r\n"}
-       #     m.parts << part
-       #   end
-       # end
 
         # We need to overwrite the content-type of the mail so MUA notices this is a signed mail
-#        m.content_type = 'multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; '
+#        newm.content_type = 'multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; '
          newm.delivery_method(mail.delivery_method.class, mail.delivery_method.settings)
          newm.subject = mail.subject
          newm.to = mail.to
@@ -149,23 +124,24 @@ module ActionMailer #:nodoc:
          newm.from = mail.from
          newm.mime_version = mail.mime_version
          newm.date = mail.date
-#         newm.body = "This is an S/MIME signed message\n"
+#        newm.body = "This is an S/MIME signed message\n"
+#        headers.each { |k, v| m[k] = v } # that does nothing in general
+
         # NOTE: We can not use this as we need a B64 encoded signature, and no
         # methods provides it within the Ruby OpenSSL library... :(
         #
         # We add the signature
-        # signature = TMail::Mail.new
+        # signature = Mail.new
         # signature.mime_version = '1.0'
         # signature['Content-Type'] = 'application/x-pkcs7-mime; smime-type=signed-data; name="smime.p7m"'
         # signature['Content-Transfer-Encoding'] = 'base64'
         # signature['Content-Disposition']  = 'attachment; filename="smime.p7m"'
         # signature.body = p7sign.to_s
-        # m.parts << signature
+        # newm.parts << signature
 
         @_message = newm
-        #@_message = m
       rescue Exception => detail
-        logger.error("Error while SMIME signing the mail : #{detail}")# if logger
+        logger.error("Error while SMIME signing the mail : #{detail}")
       end
 
       ## logger.debug("x509_sign_smime, resulted email\n-------------( test X509 )----------\n#{m.encoded}\n-------------( test X509 )----------")
