@@ -4,7 +4,7 @@ petRUShka, Fabien Penso
 
 == DESCRIPTION
 
-This plugin allows you to send X509 signed mails with Rails 3 ActionMailer. If you want to sign mails with Rails 2, you should use the original plugin: https://github.com/penso/actionmailer_x509
+This plugin allows you to send X509 signed and\or crypted mails with Rails 3 ActionMailer. If you want to sign mails with Rails 2, you should use the original plugin: https://github.com/penso/actionmailer_x509
 
 It has been tested with Rails 3.0.3.
 
@@ -67,10 +67,15 @@ your ActionMailer model.
       def sending_method(email, from , subject = "Empty subject for signed")
         # If you want to sign the mail
         x509_sign  true
-        x509_cert  "certs/yourwebsite.crt"
-        x509_key   "certs/yourwebsite.key"
+        x509_sign_cert  "certs/yourwebsite.crt"
+        x509_sign_key   "certs/yourwebsite.key"
         # In case your certificate has a passphrase
-        x509_passphrase "my passphrase for the certificate"
+        x509_sign_passphrase "my passphrase for the certificate"
+        # If you want to crypt the mail
+        x509_crypt  true
+        x509_crypt_cert  "certs/crypt.crt"
+        # In case you want to set non DES cipher
+        x509_crypt_cipher "AES-128-CBC"
 
         mail(:subject => subject, :to => email, :from => from)
       end
@@ -80,6 +85,8 @@ You can also specify the certificate and key in your environment file:
     ActionMailer::Base.default_x509_sign = true
     ActionMailer::Base.default_x509_cert = "certs/server.crt"
     ActionMailer::Base.default_x509_key  = "certs/server.key"
+    ActionMailer::Base.default_x509_crypt = true
+    ActionMailer::Base.default_x509_crypt_cert = "certs/crypt.crt"
 
 == USING TEST
 
