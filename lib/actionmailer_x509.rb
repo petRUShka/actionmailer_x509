@@ -33,61 +33,67 @@ require "openssl"
 module ActionMailer #:nodoc:
   class Base #:nodoc:
     @@default_x509_sign = false
-    @@default_x509_crypt = false # not used, for later.
-    @@default_x509_cert = nil
-    @@default_x509_key = nil
-    @@default_x509_sign_method = :smime
-    @@default_x509_crypt_method = :smime # not used, for later.
-    @@default_x509_passphrase = nil
+    @@default_x509_sign_cert = nil
+    @@default_x509_sign_key = nil
+    @@default_x509_sign_passphrase = nil
+
+    @@default_x509_crypt = false
+    @@default_x509_crypt_cert = nil
+    @@default_x509_crypt_cipher = "des"
+
+    @@default_x509_sign_and_crypt_method = :smime
 
     # Should we sign the outgoing mail?
     adv_attr_accessor :x509_sign
 
-    # Should we crypt the outgoing mail?. NOTE: not used yet.
+    # Should we crypt the outgoing mail?
     adv_attr_accessor :x509_crypt
 
     # Which certificate will be used for signing.
-    adv_attr_accessor :x509_cert
+    adv_attr_accessor :x509_sign_cert
 
     # Which private key will be used for signing.
-    adv_attr_accessor :x509_key
+    adv_attr_accessor :x509_sign_key
+
+    # Which certificate will be used for crypting.
+    adv_attr_accessor :x509_crypt_cert
+
+    # Which encryption algorithm will be used for crypting.
+    adv_attr_accessor :x509_crypt_cipher
 
     # Which signing method is used. NOTE: For later, if needed.
-    adv_attr_accessor :x509_sign_method
+    adv_attr_accessor :x509_sign_and_crypt_method
 
-    # Which crypting method is used. NOTE: not used yet.
-    adv_attr_accessor :x509_crypt_method
+    # Passphrase for the sign key, if needed.
+    adv_attr_accessor :x509_sign_passphrase
 
-    # Passphrase for the key, if needed.
-    adv_attr_accessor :x509_passphrase
-
-
-
-    # We replace the create! methods and run a new method if signing is required
-    def initialize_with_sign(method_name, *parameters)
-      mail = initialize_without_sign(method_name, *parameters)
+    # We replace the initialize methods and run a new method if signing or crypting is required
+    def initialize_with_sign_and_crypt(method_name, *parameters)
+      mail = initialize_without_sign_and_crypt(method_name, *parameters)
 
       x509_initvar()
 
       # If we need to sign the outgoing mail.
-      if should_sign?
+      if should_sign? or should_crypt?
         if logger
-          logger.debug("actionmailer_x509: We should sign the mail with #{@x509_sign_method} method.")
+          logger.debug("actionmailer_x509: We should sign and\or crypt the mail with #{@x509_sign_and_crypt_method} method.")
         end
-        __send__("x509_sign_#{@x509_sign_method}", mail)
+        __send__("x509_#{@x509_sign_and_crypt_method}", mail)
       end
 
     end
-    alias_method_chain :initialize, :sign
+    alias_method_chain :initialize, :sign_and_crypt
 
-    # X509 SMIME signing
-    def x509_sign_smime(mail)
+    # X509 SMIME signing and\or crypting
+    def x509_smime(mail)
       if logger
-        logger.debug("actionmailer_x509: X509 SMIME signing with cert #{@x509_cert} and key #{@x509_key}")
+        logger.debug("actionmailer_x509: X509 SMIME signing with cert #{@x509_cert} and key #{@x509_key}") if should_sign?
+        logger.debug("actionmailer_x509: X509 SMIME crypt with cert #{@x509_cert}") if should_crypt?
       end
 
       # We should set content_id, otherwise Mail will set content_id after signing and will broke sign
       mail.content_id ||= nil
+      mail.parts.each {|p| p.content_id ||= nil}
 
       # We can remove the headers from the older mail we encapsulate.
       # Leaving allows to have the headers signed too within the encapsulated
@@ -103,14 +109,24 @@ module ActionMailer #:nodoc:
       # mail.mime_version = nil
 
       # We load certificate and private key
-      cert = OpenSSL::X509::Certificate.new( File::read(@x509_cert) )
-      prv_key = OpenSSL::PKey::RSA.new( File::read(@x509_key), @x509_passphrase)
+      if should_sign?
+        sign_cert = OpenSSL::X509::Certificate.new( File::read(@x509_sign_cert) )
+        sign_prv_key = OpenSSL::PKey::RSA.new( File::read(@x509_sign_key), @x509_sign_passphrase)
+      end
 
-      begin
-        # Sign the mail
+      if should_crypt?
+        crypt_cert = OpenSSL::X509::Certificate.new( File::read(@x509_crypt_cert) )
+        cipher = OpenSSL::Cipher.new(@x509_crypt_cipher)
+      end
+
+#      begin
+        # Sign and crypt the mail
+
         # NOTE: the one following line is the slowest part of this code, signing is sloooow
-        p7sign = OpenSSL::PKCS7.sign(cert,prv_key,mail.encoded, [], OpenSSL::PKCS7::DETACHED)
-        smime0 = OpenSSL::PKCS7::write_smime(p7sign)
+        p7 = mail.encoded
+        p7 = OpenSSL::PKCS7.sign(sign_cert,sign_prv_key, p7, [], OpenSSL::PKCS7::DETACHED) if should_sign?
+        p7 = OpenSSL::PKCS7.encrypt([crypt_cert], (should_sign? ? OpenSSL::PKCS7::write_smime(p7) : p7), cipher, nil) if should_crypt?
+        smime0 = OpenSSL::PKCS7::write_smime(p7)
 
         # Adding the signature part to the older mail
         newm = Mail.new(smime0)
@@ -140,25 +156,24 @@ module ActionMailer #:nodoc:
         # newm.parts << signature
 
         @_message = newm
-      rescue Exception => detail
-        logger.error("Error while SMIME signing the mail : #{detail}")
-      end
+#      rescue Exception => detail
+#        logger.error("Error while SMIME signing and\or crypting the mail : #{detail}")
+#      end
 
       ## logger.debug("x509_sign_smime, resulted email\n-------------( test X509 )----------\n#{m.encoded}\n-------------( test X509 )----------")
 
-    end
-
-    # X509 SMIME crypting
-    def x509_crypt_smime(mail)
-      logger.debug("X509 SMIME crypting")
     end
 
     protected
 
     # Shall we sign the mail?
     def should_sign?
+      @should_sign ||= __should_sign?
+    end
+
+    def __should_sign?
       if @x509_sign == true
-        if not @x509_cert.nil? and not @x509_key.nil?
+        if not @x509_sign_cert.nil? and not @x509_sign_key.nil?
           return true
         else
           logger.info "X509 signing required, but no certificate and key files configured"
@@ -167,15 +182,32 @@ module ActionMailer #:nodoc:
       return false
     end
 
+    # Shall we crypt the mail?
+    def should_crypt?
+      @should_crypt ||= __should_crypt?
+    end
+
+    def __should_crypt?
+      if @x509_crypt == true
+        if not @x509_crypt_cert.nil?
+          return true
+        else
+          logger.info "X509 crypting required, but no certificate file configured"
+        end
+      end
+      return false
+    end
+
     # Initiate from the default class attributes
     def x509_initvar
-      @x509_sign ||= @@default_x509_sign
-      @x509_crypt ||= @@default_x509_crypt
-      @x509_cert ||= @@default_x509_cert
-      @x509_key ||= @@default_x509_key
-      @x509_sign_method ||= @@default_x509_sign_method
-      @x509_crypt_method ||= @@default_x509_crypt_method
-      @x509_passphrase ||= @@default_x509_passphrase
+      @x509_sign_and_crypt_method ||= @@default_x509_sign_and_crypt_method
+      @x509_sign                  ||= @@default_x509_sign
+      @x509_crypt                 ||= @@default_x509_crypt
+      @x509_crypt_cert            ||= @@default_x509_crypt_cert
+      @x509_crypt_cipher          ||= @@default_x509_crypt_cipher
+      @x509_sign_cert             ||= @@default_x509_sign_cert
+      @x509_key                   ||= @@default_x509_sign_key
+      @x509_sign_passphrase       ||= @@default_x509_sign_passphrase
     end
   end
 end

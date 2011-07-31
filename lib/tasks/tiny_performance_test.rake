@@ -1,7 +1,7 @@
 # Copyright (c) 2007 Fabien Penso <fabien.penso@conovae.com>
 #
 # A simple test to show how slow is the Ruby/SSL signature function
-# 
+#
 # All rights reserved.
 
 require 'rake'

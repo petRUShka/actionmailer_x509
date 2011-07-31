@@ -15,7 +15,7 @@ namespace :actionmailer_x509 do
       puts "#{File.dirname(__FILE__)}/../certs/ca.crt"
       puts "as an authority in your MUA. Remove it after your test!!!\n\n"
       puts "Emailing <#{ENV['email']}>"
-      Notifier.fufusigned("#{ENV['email']}", "demo@foobar.com", "Signed mail at #{Time.now.to_s}").deliver
+      Notifier.fufu_signed("#{ENV['email']}", "demo@foobar.com", "Signed mail at #{Time.now.to_s}").deliver
     end
   end
 
@@ -33,7 +33,7 @@ namespace :actionmailer_x509 do
       }
       x.report("#{n} mails with signature: ") {
         for i in 1..n do
-          Notifier.fufusigned("<destination@foobar.com>", "<demo@foobar.com>")
+          Notifier.fufu_signed("<destination@foobar.com>", "<demo@foobar.com>")
         end
       }
     end
@@ -41,7 +41,7 @@ namespace :actionmailer_x509 do
 
   desc "Generates a signed mail in a file."
   task(:generate_mail => :environment) do
-    mail = Notifier.fufusigned("<destination@foobar.com>", "<demo@foobar.com>")
+    mail = Notifier.fufu_signed("<destination@foobar.com>", "<demo@foobar.com>")
     path = ENV['mail']
     path = "tmp/signed_mail.txt" if path.nil?
     File.open(path, "w") do |f|
@@ -54,7 +54,7 @@ namespace :actionmailer_x509 do
   desc "Check if signature is valid."
   task(:verify_signature => :environment) do
     require 'tempfile'
-    mail = Notifier.fufusigned("<destination@foobar.com>", "<demo@foobar.com>")
+    mail = Notifier.fufu_signed("<destination@foobar.com>", "<demo@foobar.com>")
 
     tf = Tempfile.new('actionmailer_x509')
     tf.write mail.encoded
